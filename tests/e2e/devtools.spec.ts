@@ -352,7 +352,7 @@ test('maps the ownership tree', async ({ page }) => {
   const rows = page.locator('[data-solid-ownership-name]');
 
   await openTab(page, 'Ownership');
-  await expect(rows).toHaveText(['<App>', '<Greeting>', '<Counter>', '<Show>', '<Show>']);
+  await expect(rows).toHaveText(['<App>', '<Greeting>', '<Counter>', '<Show>', '<Show>', '<Show>']);
 
   // The expand arrow keeps its full size inside the button.
   const arrow = await page
@@ -600,6 +600,47 @@ test('lists the server calls of an action and opens them', async ({ page }) => {
     'true',
   );
   await expect(page.locator('[data-solid-function-instance-viewer]')).toContainText('loadUser');
+});
+
+test('shows async loads, waits, fallbacks and chains', async ({ page }) => {
+  await page.goto('/');
+  await openTab(page, 'Async');
+  await expect(page.locator('[data-solid-async-now]')).toContainText('Nothing is loading.');
+
+  await page.locator('#show-async').click();
+  await expect(page.locator('#async-posts')).toHaveText('post of user 1');
+
+  // While the next user loads, the panel lists what is loading.
+  await page.locator('#next-user').click();
+  await expect(page.locator('[data-solid-async-now]')).toContainText('user');
+  await expect(page.locator('#async-posts')).toHaveText('post of user 2');
+  await expect(page.locator('[data-solid-async-now]')).toContainText('Nothing is loading.');
+
+  const rows = page.locator('[data-solid-async-row]');
+  await expect(rows.filter({ hasText: 'load user' }).first()).toBeVisible();
+  await expect(rows.filter({ hasText: 'fallback at <App>' }).first()).toBeVisible();
+  // posts starts only once user has landed.
+  await expect(rows.filter({ hasText: 'chain user → posts' }).first()).toContainText(
+    'loads ran one after another',
+  );
+
+  // The click held the write until both loads landed, and nothing on screen said so.
+  // solid-js rc.20 lists what the click waited on in a different order than rc.13.
+  const wait = rows.filter({ hasText: /wait on (user, posts|posts, user)/ }).first();
+  await expect(wait).toContainText('no pending state shown');
+  await wait.click();
+  const detail = page.locator('[data-solid-async-detail]');
+  await expect(detail).toContainText('click on button#next-user');
+  await expect(detail).toContainText('userId 1 → 2');
+
+  // The filter hides a kind of record.
+  await page.locator('[data-solid-async-filter="chain"]').click();
+  await expect(rows.filter({ hasText: 'chain user → posts' })).toHaveCount(0);
+
+  // A load links to its node in the reactivity graph.
+  await rows.filter({ hasText: 'load user' }).first().click();
+  await detail.getByRole('button', { name: 'Show in the reactivity graph' }).click();
+  await expect(page.locator('[data-solid-reactivity-detail]')).toContainText('user');
 });
 
 test('copies reports for an agent', async ({ page, context }) => {

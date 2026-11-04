@@ -18,6 +18,7 @@ import IconButton from '../ui/IconButton.js';
 import { type ServerFunctionInstance, ServerFunctionViewer } from './functions/index.js';
 import { captureServerFunctionCall } from './functions/tracker.js';
 import {
+  AsyncIcon,
   ErrorIcon,
   FunctionIcon,
   GraphIcon,
@@ -29,6 +30,7 @@ import {
   TimelineIcon,
   TreeIcon,
 } from './icons.js';
+import { AsyncHistory, startAsyncCapture, type AsyncRecord } from './async/tracker.js';
 import { HighlightUpdatesOverlay } from './highlight-updates/overlay.js';
 import { installElementTracking, type InspectedComponent } from './inspector/lookup.js';
 import { InspectorOverlay } from './inspector/overlay.js';
@@ -44,13 +46,15 @@ const ReactivityViewer = clientOnly(() => import('./reactivity/index.js'), { laz
 const OwnershipViewer = clientOnly(() => import('./ownership/index.js'), { lazy: true });
 const IssuesViewer = clientOnly(() => import('./issues/index.js'), { lazy: true });
 const TimelineViewer = clientOnly(() => import('./timeline/index.js'), { lazy: true });
+const AsyncViewer = clientOnly(() => import('./async/index.js'), { lazy: true });
 
-type Tab = 'err' | 'issues' | 'tl' | 'fn' | 'rx' | 'own';
+type Tab = 'err' | 'issues' | 'tl' | 'async' | 'fn' | 'rx' | 'own';
 
 const TABS: { value: Tab; label: string; icon: typeof ErrorIcon }[] = [
   { value: 'err', label: 'Errors', icon: ErrorIcon },
   { value: 'issues', label: 'Issues', icon: IssueIcon },
   { value: 'tl', label: 'Timeline', icon: TimelineIcon },
+  { value: 'async', label: 'Async', icon: AsyncIcon },
   { value: 'fn', label: 'Server functions', icon: FunctionIcon },
   { value: 'rx', label: 'Reactivity', icon: GraphIcon },
   { value: 'own', label: 'Ownership', icon: TreeIcon },
@@ -388,6 +392,13 @@ export function DevToolbar(props: DevToolbarProps) {
     onCleanup(startTimeline(timeline, () => setTimelineEntries(timeline.snapshot())));
   }
 
+  // Loads that finish before the toolbar settles are kept too.
+  const asyncHistory = new AsyncHistory();
+  const [asyncRecords, setAsyncRecords] = createSignal<AsyncRecord[]>([]);
+  if (!isServer) {
+    onCleanup(startAsyncCapture(asyncHistory, () => setAsyncRecords(asyncHistory.records)));
+  }
+
   const [instances, setInstances] = createSignal<
     Record<string, ServerFunctionInstance | undefined>
   >({});
@@ -628,6 +639,23 @@ export function DevToolbar(props: DevToolbarProps) {
                   onViewInGraph={(node) => {
                     setGraphFocus({ node });
                     show('rx');
+                  }}
+                />
+                <AsyncViewer
+                  show={visible('async')}
+                  history={asyncHistory}
+                  records={asyncRecords()}
+                  onClear={() => {
+                    asyncHistory.clear();
+                    setAsyncRecords([]);
+                  }}
+                  onViewInGraph={(node) => {
+                    setGraphFocus({ node });
+                    show('rx');
+                  }}
+                  onViewOwner={(owner) => {
+                    setOwnershipFocus({ owner });
+                    show('own');
                   }}
                 />
                 <ReactivityViewer

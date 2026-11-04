@@ -1,4 +1,4 @@
-import { render } from '@solidjs/web';
+import { Loading, render } from '@solidjs/web';
 import { DevToolbar, mountDevToolbar, pushServerFunctionCall } from '@solidjs/start-devtools';
 import { serializeString } from '@solidjs/web/server-functions/client';
 import { createEffect, createMemo, createSignal, OBSERVE, Show } from 'solid-js';
@@ -88,6 +88,40 @@ function DraftReader() {
   return <p id="fixture-draft">{text}</p>;
 }
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Two loads where the second waits for the first, inside a Loading boundary.
+function AsyncProfile() {
+  const [id, setId] = createSignal(1, { name: 'userId' });
+  const user = createMemo(
+    async () => {
+      const value = id();
+      await wait(300);
+      return { id: value, name: `user ${value}` };
+    },
+    { name: 'user' },
+  );
+  const posts = createMemo(
+    async () => {
+      const current = user();
+      await wait(300);
+      return [`post of ${current.name}`];
+    },
+    { name: 'posts' },
+  );
+  return (
+    <>
+      <button id="next-user" onClick={() => setId((value) => value + 1)}>
+        next user
+      </button>
+      <Loading fallback={<p id="async-fallback">loading</p>}>
+        <p id="async-user">{user().name}</p>
+        <p id="async-posts">{posts()[0]}</p>
+      </Loading>
+    </>
+  );
+}
+
 function Greeting(props: { name: string }) {
   return <p id="fixture-greeting">{`hello ${props.name}`}</p>;
 }
@@ -114,6 +148,7 @@ function Counter() {
 function App() {
   const [broken, setBroken] = createSignal(false);
   const [writer, setWriter] = createSignal(false);
+  const [profile, setProfile] = createSignal(false);
 
   return (
     <main>
@@ -137,6 +172,12 @@ function App() {
       </button>
       <Show when={writer()}>
         <DraftReader />
+      </Show>
+      <button id="show-async" onClick={() => setProfile(true)}>
+        show async
+      </button>
+      <Show when={profile()}>
+        <AsyncProfile />
       </Show>
       <button id="throw-client-error" onClick={() => setBroken(true)}>
         throw client error

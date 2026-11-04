@@ -7,6 +7,7 @@ Development error and server-function tooling for Solid Start mode.
 - Runtime error inspection with source-mapped stack frames.
 - The issues the runtime reports, such as a signal read outside a tracking scope.
 - A timeline of what each action re-ran, and why.
+- What the app is loading now, and how its async loads, waits and fallbacks went.
 - Server-function request and response inspection.
 - A reactivity graph of the live signals, memos and effects in the app.
 - An ownership tree of the components and scopes the app created.
@@ -89,6 +90,25 @@ The panel turns on the attribution engine of `solid-js` (`solid-js/attribution`)
 toolbar mounts, so the first action is recorded even with the dock closed. Clicks in the
 toolbar itself change nothing in the app, so they are left out. The timeline needs a
 development build of `solid-js`.
+
+## Async
+
+The async panel shows what the app waits on.
+
+- **Loading now** lists the async memos that are loading while the panel is open, with how
+  long each has been loading and how many nodes wait on them.
+- **Loads** are async memos that landed, or that a newer load replaced.
+- **Waits** are writes the runtime held back until the async work they depend on settled,
+  such as a click whose new screen needed data. A wait is flagged when the screen showed no
+  pending state, or when it took long.
+- **Fallbacks** are `<Loading>` fallbacks that showed. One shorter than 150ms is flagged as a
+  flash.
+- **Chains** are loads that ran one after another, each starting only when the one before
+  it landed, which could often run at the same time.
+
+Select a record for its details, the action that started it, and links to the reactivity
+graph and the ownership tree. Records come from the attribution engine of `solid-js`, so a
+record shows up once it has finished. The panel needs a development build of `solid-js`.
 
 ## Reactivity graph
 
