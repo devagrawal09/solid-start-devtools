@@ -166,6 +166,49 @@ test('fits the dock and the padding to the window', async ({ page }) => {
   expect(await page.evaluate(() => document.documentElement.style.paddingBottom)).toBe('');
 });
 
+test('leaves out errors thrown by browser extensions', async ({ page }) => {
+  await page.goto('/');
+
+  // An extension's script runs in the page, so its errors reach the window too.
+  await page.evaluate(() => {
+    const error = new TypeError("Cannot read properties of undefined (reading 'M_ID')");
+    error.stack = [
+      "TypeError: Cannot read properties of undefined (reading 'M_ID')",
+      '    at Y (chrome-extension://abcdefghijklmnop/executors/200.js:1:761)',
+      '    at E (chrome-extension://abcdefghijklmnop/executors/200.js:1:1442)',
+    ].join('\n');
+    window.dispatchEvent(
+      new ErrorEvent('error', {
+        error,
+        message: error.message,
+        filename: 'chrome-extension://abcdefghijklmnop/executors/200.js',
+      }),
+    );
+    const rejection = new Error('extension rejection');
+    rejection.stack = 'Error: extension rejection\n    at x (moz-extension://1234/content.js:3:9)';
+    const promise = Promise.reject(rejection);
+    promise.catch(() => {});
+    window.dispatchEvent(
+      new PromiseRejectionEvent('unhandledrejection', { promise, reason: rejection }),
+    );
+  });
+
+  // Neither counts as an error of the app, so the dock stays closed.
+  const launcher = page.getByRole('button', { name: 'Open Start Devtools' });
+  await expect(launcher).toHaveAttribute('aria-label', 'Open Start Devtools');
+  await expect(page.getByRole('region', { name: 'Start Devtools' })).toBeHidden();
+
+  // An error of the app still counts.
+  await page.locator('#throw-client-error').click();
+  await expect(page.getByRole('tab', { name: 'Errors', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.locator('[data-solid-error-viewer-error-info-message]')).toHaveText(
+    'client boom',
+  );
+});
+
 test('captures client errors', async ({ page }) => {
   await page.goto('/');
   await page.locator('#throw-client-error').click();

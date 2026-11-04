@@ -35,6 +35,7 @@ import { HighlightUpdatesOverlay } from './highlight-updates/overlay.js';
 import { installElementTracking, type InspectedComponent } from './inspector/lookup.js';
 import { InspectorOverlay } from './inspector/overlay.js';
 import { addIssues, captureIssues, type IssueEntry } from './issues/tracker.js';
+import { isExtensionError } from './extension-errors.js';
 import { openInEditor } from './open-in-editor.js';
 import { CopyReportButton } from './report/CopyReportButton.js';
 import { pageRoute } from './report/markdown.js';
@@ -362,10 +363,13 @@ export function DevToolbar(props: DevToolbarProps) {
       if (!error.error && error.message?.startsWith('ResizeObserver loop')) {
         return;
       }
+      // A browser extension's script throws in the page too. It is not the app's.
+      if (isExtensionError(error.error, error.filename)) return;
       pushError(error.error ?? error);
     };
 
     const onRejectionEvent = (event: PromiseRejectionEvent) => {
+      if (isExtensionError(event.reason)) return;
       pushError(event.reason);
     };
 
