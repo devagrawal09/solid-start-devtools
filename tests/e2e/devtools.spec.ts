@@ -209,6 +209,26 @@ test('leaves out errors thrown by browser extensions', async ({ page }) => {
   );
 });
 
+test('keeps the newest errors when an error repeats in a loop', async ({ page }) => {
+  await page.goto('/');
+
+  // An error thrown on every frame of a loop would grow the list without end.
+  await page.evaluate(() => {
+    for (let i = 1; i <= 205; i++) {
+      const error = new Error(`frame ${i}`);
+      window.dispatchEvent(new ErrorEvent('error', { error, message: error.message }));
+    }
+  });
+
+  const tab = page.getByRole('tab', { name: 'Errors', exact: true });
+  await expect(tab).toHaveAttribute('aria-selected', 'true');
+  await expect(tab).toContainText('200');
+  // The newest is shown first, and the oldest five are gone.
+  await expect(page.locator('[data-solid-error-viewer-error-info-message]')).toHaveText(
+    'frame 205',
+  );
+});
+
 test('captures client errors', async ({ page }) => {
   await page.goto('/');
   await page.locator('#throw-client-error').click();

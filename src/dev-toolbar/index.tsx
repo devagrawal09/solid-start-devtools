@@ -36,6 +36,7 @@ import { installElementTracking, type InspectedComponent } from './inspector/loo
 import { InspectorOverlay } from './inspector/overlay.js';
 import { addIssues, captureIssues, type IssueEntry } from './issues/tracker.js';
 import { isExtensionError } from './extension-errors.js';
+import { addError } from './error-list.js';
 import { openInEditor } from './open-in-editor.js';
 import { CopyReportButton } from './report/CopyReportButton.js';
 import { pageRoute } from './report/markdown.js';
@@ -353,7 +354,7 @@ export function DevToolbar(props: DevToolbarProps) {
 
   function pushError(error: unknown) {
     console.error(error);
-    setErrors((current) => [error, ...current]);
+    setErrors((current) => addError(current, error));
 
     show('err');
   }
