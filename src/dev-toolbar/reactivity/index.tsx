@@ -3,7 +3,9 @@ import { createEffect, createMemo, createSignal, For, getOwner, Show } from 'sol
 import { Badge } from '../../ui/Badge.js';
 import IconButton from '../../ui/IconButton.js';
 import Placeholder from '../../ui/Placeholder.js';
+import { ResizeHandle } from '../../ui/ResizeHandle.js';
 import { Text } from '../../ui/Text.js';
+import { useResizableDetail } from '../../ui/use-resizable-detail.js';
 import { FitIcon, PauseIcon, PlayIcon } from '../icons.js';
 import { CopyReportButton } from '../report/CopyReportButton.js';
 import { pageRoute } from '../report/markdown.js';
@@ -164,6 +166,10 @@ export default function ReactivityViewer(props: ReactivityViewerProps): JSX.Elem
   const [selected, setSelected] = createSignal<string>();
   const [hovered, setHovered] = createSignal<string>();
   const [view, setView] = createSignal<ViewTransform>({ x: 0, y: 0, k: 1 });
+  const detail = useResizableDetail({
+    storageKey: 'solid-start-devtools:reactivity-detail-width',
+    defaultWidth: 304,
+  });
 
   let viewport: HTMLDivElement | undefined;
   let fittedSize = '';
@@ -702,7 +708,8 @@ export default function ReactivityViewer(props: ReactivityViewerProps): JSX.Elem
 
               <Show when={selectedNode()}>
                 {(node) => (
-                  <aside data-solid-reactivity-detail>
+                  <aside data-solid-reactivity-detail style={{ width: `${detail.width()}px` }}>
+                    <ResizeHandle detail={detail} />
                     <div data-solid-reactivity-detail-content>
                       <NodeSummary
                         node={node()}

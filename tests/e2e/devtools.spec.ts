@@ -456,6 +456,32 @@ test('maps the ownership tree', async ({ page }) => {
     .locator('[data-solid-ownership-label]')
     .filter({ hasText: /^doubled$/ })
     .click();
+
+  // The ownership detail pane can be resized horizontally by dragging its left edge handle.
+  const handle = detail.locator('[data-solid-resize-handle]');
+  await expect(handle).toBeVisible();
+  const initialWidth = (await detail.boundingBox())!.width;
+
+  const handleBox = (await handle.boundingBox())!;
+  await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + 100);
+  await page.mouse.down();
+  // Drag left by 100px to widen the detail pane
+  await page.mouse.move(handleBox.x + handleBox.width / 2 - 100, handleBox.y + 100);
+  await page.mouse.up();
+
+  const expandedWidth = (await detail.boundingBox())!.width;
+  expect(expandedWidth).toBeGreaterThan(initialWidth + 80);
+
+  // Double click resets the width
+  await handle.dblclick();
+  const resetWidth = (await detail.boundingBox())!.width;
+  expect(Math.abs(resetWidth - 320)).toBeLessThanOrEqual(2);
+
+  // The left arrow key widens the pane from the keyboard.
+  await handle.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(handle).toHaveAttribute('aria-valuenow', '336');
+
   await detail
     .locator('[data-solid-ownership-detail-head]')
     .getByRole('button', { name: 'View in graph' })

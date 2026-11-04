@@ -3,7 +3,9 @@ import { createEffect, createMemo, createSignal, For, getOwner, Show } from 'sol
 import { Badge } from '../../ui/Badge.js';
 import IconButton from '../../ui/IconButton.js';
 import Placeholder from '../../ui/Placeholder.js';
+import { ResizeHandle } from '../../ui/ResizeHandle.js';
 import { Text } from '../../ui/Text.js';
+import { useResizableDetail } from '../../ui/use-resizable-detail.js';
 import { CollapseIcon, EditIcon, ExpandIcon, EyeIcon, PauseIcon, PlayIcon } from '../icons.js';
 import { openInEditor } from '../open-in-editor.js';
 import { CopyReportButton } from '../report/CopyReportButton.js';
@@ -194,6 +196,7 @@ export default function OwnershipViewer(props: OwnershipViewerProps): JSX.Elemen
   const [query, setQuery] = createSignal('');
   const [collapsed, setCollapsed] = createSignal<string[]>([]);
   const [selected, setSelected] = createSignal<string>();
+  const detail = useResizableDetail({ storageKey: 'solid-start-devtools:ownership-detail-width' });
 
   const firstSeen = new Map<string, number>();
   let appliedFocus: { owner: object } | undefined;
@@ -464,7 +467,8 @@ export default function OwnershipViewer(props: OwnershipViewerProps): JSX.Elemen
 
               <Show when={selectedNode()}>
                 {(node) => (
-                  <aside data-solid-ownership-detail>
+                  <aside data-solid-ownership-detail style={{ width: `${detail.width()}px` }}>
+                    <ResizeHandle detail={detail} />
                     <div data-solid-ownership-detail-content>
                       <div data-solid-ownership-detail-head>
                         <span data-solid-ownership-kind={node().kind} />
