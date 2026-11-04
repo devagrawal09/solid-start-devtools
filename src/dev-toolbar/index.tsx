@@ -26,27 +26,31 @@ import {
   IssueIcon,
   MinimizeIcon,
   SolidIcon,
+  TimelineIcon,
   TreeIcon,
 } from './icons.js';
 import { HighlightUpdatesOverlay } from './highlight-updates/overlay.js';
 import { installElementTracking, type InspectedComponent } from './inspector/lookup.js';
 import { InspectorOverlay } from './inspector/overlay.js';
+import { addIssues, captureIssues, type IssueEntry } from './issues/tracker.js';
 import { openInEditor } from './open-in-editor.js';
 import { excludeOwner, includeOwner } from './ownership/registry.js';
 import { excludeReactiveOwner, includeReactiveOwner } from './reactivity/registry.js';
-import { addIssues, captureIssues, type IssueEntry } from './issues/tracker.js';
+import { startTimeline, TimelineBuilder, type TimelineEntry } from './timeline/tracker.js';
 import './index.css';
 
 const ErrorViewer = clientOnly(() => import('./error-viewer/index.js'), { lazy: true });
 const ReactivityViewer = clientOnly(() => import('./reactivity/index.js'), { lazy: true });
 const OwnershipViewer = clientOnly(() => import('./ownership/index.js'), { lazy: true });
 const IssuesViewer = clientOnly(() => import('./issues/index.js'), { lazy: true });
+const TimelineViewer = clientOnly(() => import('./timeline/index.js'), { lazy: true });
 
-type Tab = 'err' | 'issues' | 'fn' | 'rx' | 'own';
+type Tab = 'err' | 'issues' | 'tl' | 'fn' | 'rx' | 'own';
 
 const TABS: { value: Tab; label: string; icon: typeof ErrorIcon }[] = [
   { value: 'err', label: 'Errors', icon: ErrorIcon },
   { value: 'issues', label: 'Issues', icon: IssueIcon },
+  { value: 'tl', label: 'Timeline', icon: TimelineIcon },
   { value: 'fn', label: 'Server functions', icon: FunctionIcon },
   { value: 'rx', label: 'Reactivity', icon: GraphIcon },
   { value: 'own', label: 'Ownership', icon: TreeIcon },
@@ -331,6 +335,8 @@ export function DevToolbar(props: DevToolbarProps) {
   const [graphFocus, setGraphFocus] = createSignal<{ node: object }>();
   // The graph can ask the ownership tree to show an owner the same way.
   const [ownershipFocus, setOwnershipFocus] = createSignal<{ owner: object }>();
+  // The timeline can ask the server-function panel to show a call.
+  const [functionsFocus, setFunctionsFocus] = createSignal<{ instance: string }>();
 
   const [errors, setErrors] = createSignal<unknown[]>([]);
 
@@ -373,6 +379,14 @@ export function DevToolbar(props: DevToolbarProps) {
     onCleanup(captureIssues((added) => setIssues((current) => addIssues(current, added))));
   }
   const issueCount = createMemo(() => issues().reduce((total, entry) => total + entry.count, 0));
+
+  // The first action can come before the toolbar settles, so the timeline
+  // starts during setup too.
+  const timeline = new TimelineBuilder();
+  const [timelineEntries, setTimelineEntries] = createSignal<TimelineEntry[]>([]);
+  if (!isServer) {
+    onCleanup(startTimeline(timeline, () => setTimelineEntries(timeline.snapshot())));
+  }
 
   const [instances, setInstances] = createSignal<
     Record<string, ServerFunctionInstance | undefined>
@@ -600,6 +614,22 @@ export function DevToolbar(props: DevToolbarProps) {
                     show('rx');
                   }}
                 />
+                <TimelineViewer
+                  show={visible('tl')}
+                  entries={timelineEntries()}
+                  onClear={() => {
+                    timeline.clear();
+                    setTimelineEntries([]);
+                  }}
+                  onViewCall={(instance) => {
+                    setFunctionsFocus({ instance });
+                    show('fn');
+                  }}
+                  onViewInGraph={(node) => {
+                    setGraphFocus({ node });
+                    show('rx');
+                  }}
+                />
                 <ReactivityViewer
                   show={visible('rx')}
                   focus={graphFocus()}
@@ -620,6 +650,7 @@ export function DevToolbar(props: DevToolbarProps) {
                 />
                 <ServerFunctionViewer
                   show={visible('fn')}
+                  focus={functionsFocus()}
                   instances={instances()}
                   onDeleteInstance={(value) => {
                     setInstances((current) => {

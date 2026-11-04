@@ -6,6 +6,7 @@ Development error and server-function tooling for Solid Start mode.
 
 - Runtime error inspection with source-mapped stack frames.
 - The issues the runtime reports, such as a signal read outside a tracking scope.
+- A timeline of what each action re-ran, and why.
 - Server-function request and response inspection.
 - A reactivity graph of the live signals, memos and effects in the app.
 - An ownership tree of the components and scopes the app created.
@@ -63,6 +64,31 @@ the same findings, mixed with everything else.
 
 The panel listens from the moment the toolbar mounts, so findings from the first render
 are there when you open it. Issues need a development build of `solid-js`.
+
+## Timeline
+
+The timeline lists what each user action made the app do. A click, a key press or an
+input is one row, with the signals it wrote and every memo and effect that re-ran because
+of it. An update from outside a handler, such as a timer or a promise, is a row of its own.
+
+- A row shows the writes, the number of re-runs and how long the update took.
+- Select a row for the input delay, the handler time, the time until the update settled,
+  and the writes with their old and new values.
+- Open a re-run to see why it ran: the changes it saw, and the changes behind each of
+  those, down to the write that started them.
+- A re-run marked **no change** produced the same value as before, so its work was wasted.
+- The eye opens the memo or effect in the reactivity graph.
+- Server-function calls the action made are listed with their status and time. Click one
+  to open it in the server-function panel. A click that only calls the server still gets a
+  row.
+- Updates no action caused whose writes all went to unnamed signals are hidden, since most
+  come from Solid's own state, such as a `<Show>` condition. The button above the list shows
+  how many there are and brings them back.
+
+The panel turns on the attribution engine of `solid-js` (`solid-js/attribution`) when the
+toolbar mounts, so the first action is recorded even with the dock closed. Clicks in the
+toolbar itself change nothing in the app, so they are left out. The timeline needs a
+development build of `solid-js`.
 
 ## Reactivity graph
 

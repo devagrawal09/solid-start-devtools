@@ -1,7 +1,7 @@
 import { render } from '@solidjs/web';
 import { DevToolbar, mountDevToolbar, pushServerFunctionCall } from '@solidjs/start-devtools';
 import { serializeString } from '@solidjs/web/server-functions/client';
-import { createEffect, createMemo, createSignal, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, OBSERVE, Show } from 'solid-js';
 
 function Broken(): never {
   throw new Error('client boom');
@@ -52,6 +52,34 @@ async function emitUploadRequest() {
   });
 }
 
+// A call record as the runtime sends it once a call settles. The handler
+// writes nothing, so the call is all the click did.
+function callServer() {
+  const origin = OBSERVE?.attribution.currentOrigin();
+  const at = performance.now();
+  const request = new Request('/_server', { method: 'POST', body: '[1]' });
+  setTimeout(() => {
+    OBSERVE?.records.emit(
+      'call',
+      {
+        id: 'load-user',
+        name: 'loadUser',
+        at,
+        durationMs: performance.now() - at,
+        method: 'POST',
+        outcome: 'ok',
+        status: 200,
+        origin,
+      },
+      {
+        args: [1],
+        request,
+        response: new Response('{"id":1}', { headers: { 'content-type': 'application/json' } }),
+      } as never,
+    );
+  }, 40);
+}
+
 // Reads a signal in its body, outside any tracking scope, which the runtime
 // reports as a warning.
 function DraftReader() {
@@ -100,6 +128,9 @@ function App() {
       </button>
       <button id="emit-upload-request" onClick={emitUploadRequest}>
         emit upload request
+      </button>
+      <button id="call-server" onClick={callServer}>
+        call server
       </button>
       <button id="emit-warning" onClick={() => setWriter((value) => !value)}>
         emit warning

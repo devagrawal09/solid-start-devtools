@@ -535,6 +535,73 @@ test('lists runtime issues', async ({ page }) => {
   await expect(page.getByRole('tab', { name: 'Issues', exact: true })).not.toContainText('2');
 });
 
+test('shows what each action re-ran and why', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#increment-count').click();
+
+  await openTab(page, 'Timeline');
+  const rows = page.locator('[data-solid-timeline-row]');
+  // Clicks on the toolbar change nothing in the app, so the click on the counter is the only entry.
+  await expect(rows).toHaveCount(1);
+  await expect(rows.first()).toContainText('click on button#increment-count');
+  await expect(rows.first()).toContainText('1 write · 3 re-runs');
+  await expect(rows.first()).toContainText('committed');
+
+  await rows.first().click();
+  const detail = page.locator('[data-solid-timeline-detail]');
+  await expect(detail.locator('[data-solid-timeline-write]')).toHaveText(/write\s*count\s*0 → 1/);
+  await expect(detail.locator('[data-solid-timeline-run-toggle]')).toHaveText([
+    /doubled/,
+    /effect/,
+    /report-doubled/,
+  ]);
+
+  // An effect re-ran because the memo it reads changed, which the write caused.
+  await detail
+    .locator('[data-solid-timeline-run-toggle]')
+    .filter({ hasText: 'report-doubled' })
+    .click();
+  const causes = detail.locator(
+    '[data-solid-timeline-run][data-open] [data-solid-timeline-causes]',
+  );
+  await expect(causes.first()).toContainText('doubled changed');
+  await expect(causes.first()).toContainText('count');
+
+  // The eye opens the memo in the reactivity graph.
+  await detail
+    .locator('[data-solid-timeline-run]')
+    .filter({ hasText: /^doubled/ })
+    .getByRole('button', { name: 'View in graph' })
+    .click();
+  await expect(page.getByRole('tab', { name: 'Reactivity', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.locator('[data-solid-reactivity-detail]')).toContainText('doubled');
+});
+
+test('lists the server calls of an action and opens them', async ({ page }) => {
+  await page.goto('/');
+  // The handler writes nothing, so the call is all the click did.
+  await page.locator('#call-server').click();
+
+  await openTab(page, 'Timeline');
+  const row = page.locator('[data-solid-timeline-row]').filter({ hasText: 'button#call-server' });
+  await expect(row).toContainText('1 call');
+  await row.click();
+
+  const call = page.locator('[data-solid-timeline-call]');
+  await expect(call).toContainText('loadUser');
+  await expect(call).toContainText('200');
+  await call.click();
+
+  await expect(page.getByRole('tab', { name: 'Server functions', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.locator('[data-solid-function-instance-viewer]')).toContainText('loadUser');
+});
+
 test('copies reports for an agent', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const clipboard = () => page.evaluate(() => navigator.clipboard.readText());

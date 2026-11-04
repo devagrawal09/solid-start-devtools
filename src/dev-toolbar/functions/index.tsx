@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, Loading, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, Loading, Show } from 'solid-js';
 import type { JSX } from '@solidjs/web';
 import {
   BODY_FORMAT_FILE_KEY,
@@ -375,12 +375,24 @@ function EmptyServerFunctions(): JSX.Element {
 
 export interface ServerFunctionViewerProps {
   instances: Record<string, ServerFunctionInstance | undefined>;
+  /**
+   * A call another panel asked to show. Pass a new object for every request,
+   * so asking for the same call twice still selects it.
+   */
+  focus?: { instance: string };
   onDeleteInstance: (value: string) => void;
   show?: boolean;
 }
 
 export function ServerFunctionViewer(props: ServerFunctionViewerProps): JSX.Element {
   const [currentInstance, setCurrentInstance] = createSignal<string>();
+
+  createEffect(
+    () => props.focus,
+    (request) => {
+      if (request) setCurrentInstance(request.instance);
+    },
+  );
 
   const keys = createMemo(() => Object.keys(props.instances));
 

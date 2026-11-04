@@ -27,6 +27,18 @@ export interface CallRecordsChannel {
 }
 
 /**
+ * The panel's key for each call the records showed, by the runtime's live
+ * object for the call. Other panels get the live object from the `"call"`
+ * record too, so they can point the panel at the same call.
+ */
+const shownCalls = new WeakMap<object, string>();
+
+/** The panel's key for a call, from the live object of its `"call"` record. */
+export function instanceOfCall(live: object): string | undefined {
+  return shownCalls.get(live);
+}
+
+/**
  * Feeds the server-function panel from the runtime's records. A call shows
  * up when its request is sent and completes when it settles; the two
  * records are joined by the `live` object, which the runtime hands to both
@@ -56,12 +68,12 @@ export function connectCallRecords(
   const offCall = records.subscribe(
     'call',
     (event, live) => {
-      const instance = instances.get(live);
-      const events =
-        instance === undefined
-          ? callRecordToEvents(event, live, key(event.id))
-          : settleRecordToEvents(event, live, instance);
-      if (instance !== undefined) instances.delete(live);
+      const instance = instances.get(live) ?? key(event.id);
+      const events = instances.has(live)
+        ? settleRecordToEvents(event, live, instance)
+        : callRecordToEvents(event, live, instance);
+      instances.delete(live);
+      if (events.length) shownCalls.set(live, instance);
       for (const call of events) push(call);
     },
     { bodies: true },
