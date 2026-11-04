@@ -643,6 +643,43 @@ test('shows async loads, waits, fallbacks and chains', async ({ page }) => {
   await expect(page.locator('[data-solid-reactivity-detail]')).toContainText('user');
 });
 
+test('copies a report of the whole session', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const clipboard = () => page.evaluate(() => navigator.clipboard.readText());
+
+  await page.goto('/');
+  await page.locator('#increment-count').click();
+  await page.locator('#emit-warning').click();
+
+  await openTab(page, 'Errors');
+  await page.getByRole('button', { name: 'Copy the whole session for an agent' }).click();
+  await expect.poll(clipboard).toContain('# Solid devtools session');
+  const report = await clipboard();
+  expect(report).toContain('## Issues (1)');
+  expect(report).toContain('`STRICT_READ_UNTRACKED`');
+  expect(report).toContain('## Recent actions, newest first');
+  expect(report).toContain('click on button#increment-count');
+  expect(report).not.toContain('## Errors');
+});
+
+test('hides updates that only touched unnamed signals', async ({ page }) => {
+  await page.goto('/');
+  // The Loading boundary settles through Solid's own unnamed signals.
+  await page.locator('#show-async').click();
+  await expect(page.locator('#async-posts')).toHaveText('post of user 1');
+
+  await openTab(page, 'Timeline');
+  const rows = page.locator('[data-solid-timeline-row]');
+  const toggle = page.locator('[data-solid-timeline-unnamed]');
+  await expect(toggle).toContainText(/Show \d+ unnamed update/);
+  await expect(rows.filter({ hasText: /^update/ })).toHaveCount(0);
+  await expect(rows.filter({ hasText: 'button#show-async' })).toHaveCount(1);
+
+  await toggle.click();
+  await expect(toggle).toContainText(/Hide \d+ unnamed update/);
+  expect(await rows.count()).toBeGreaterThan(1);
+});
+
 test('copies reports for an agent', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const clipboard = () => page.evaluate(() => navigator.clipboard.readText());

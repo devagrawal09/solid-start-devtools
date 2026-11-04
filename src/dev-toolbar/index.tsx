@@ -36,6 +36,8 @@ import { installElementTracking, type InspectedComponent } from './inspector/loo
 import { InspectorOverlay } from './inspector/overlay.js';
 import { addIssues, captureIssues, type IssueEntry } from './issues/tracker.js';
 import { openInEditor } from './open-in-editor.js';
+import { CopyReportButton } from './report/CopyReportButton.js';
+import { pageRoute } from './report/markdown.js';
 import { excludeOwner, includeOwner } from './ownership/registry.js';
 import { excludeReactiveOwner, includeReactiveOwner } from './reactivity/registry.js';
 import { startTimeline, TimelineBuilder, type TimelineEntry } from './timeline/tracker.js';
@@ -419,6 +421,28 @@ export function DevToolbar(props: DevToolbarProps) {
 
   const callCount = createMemo(() => Object.keys(instances()).length);
 
+  async function copySession(): Promise<string> {
+    // Loaded on use: mapping stacks needs the source-map reader the error panel loads lazily.
+    const [{ resolveErrorFrames }, { SESSION_ERRORS, sessionReport }] = await Promise.all([
+      import('./report/error-report.js'),
+      import('./report/session-report.js'),
+    ]);
+    const recent = errors().slice(0, SESSION_ERRORS);
+    const resolved = await Promise.all(
+      recent.map(async (error) => ({ error, frames: await resolveErrorFrames(error) })),
+    );
+    return sessionReport({
+      errors: resolved,
+      errorCount: errors().length,
+      issues: issues(),
+      timeline: timelineEntries(),
+      asyncRecords: asyncRecords(),
+      calls: Object.values(instances()).filter((call) => call !== undefined),
+      route: pageRoute(),
+      version,
+    });
+  }
+
   const badge = (value: Tab): number => {
     if (value === 'err') return errors().length;
     if (value === 'issues') return issueCount();
@@ -550,6 +574,7 @@ export function DevToolbar(props: DevToolbarProps) {
               >
                 <HighlightUpdatesIcon title="Highlight updates (Alt+Shift+H)" />
               </IconButton>
+              <CopyReportButton label="the whole session" report={copySession} />
               <IconButton onClick={close}>
                 <MinimizeIcon title="Close Start Devtools" />
               </IconButton>

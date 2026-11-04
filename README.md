@@ -38,6 +38,20 @@ does not include the toolbar.
 
 The same import is safe in development and production entries.
 
+## Copy the whole session
+
+The copy button in the dock header puts one Markdown report of everything the devtools
+noticed on the clipboard, for when it is not clear which panel holds the problem.
+
+- The three newest errors in full, with their mapped stacks and source.
+- Every issue, with its count and owner.
+- The five newest timeline actions, with their writes, re-runs and calls.
+- The async records that were flagged, such as a wait with no pending state.
+- The server calls that failed.
+
+A section only appears when its panel has something in it. Values with sensitive names are
+redacted, as in the reports of each panel.
+
 ## Demo
 
 Two demo apps live in `examples`.
