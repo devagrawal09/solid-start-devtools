@@ -1,0 +1,300 @@
+[data-solid-issues-viewer] {
+  color: var(--start-dt-text);
+
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  min-height: 0;
+}
+
+[data-solid-issues-nav] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 0.5rem;
+
+  padding: 0.5rem 0.75rem;
+
+  border-bottom: var(--start-dt-border-soft) 1px solid;
+}
+
+[data-solid-issues-search] {
+  flex: 1;
+  min-width: 6rem;
+  max-width: 18rem;
+
+  padding: 0.25rem 0.5rem;
+
+  border-radius: 0.5rem;
+  border: var(--start-dt-border) 1px solid;
+  background: var(--start-dt-surface);
+  color: var(--start-dt-text);
+
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+[data-solid-issues-search]:focus {
+  outline: none;
+  border-color: var(--start-dt-accent);
+}
+
+[data-solid-issues-filters] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 0.25rem;
+}
+
+[data-solid-issues-filter] {
+  display: flex;
+  align-items: center;
+
+  gap: 0.25rem;
+
+  padding: 0.1875rem 0.5rem;
+
+  border-radius: 9999px;
+  border: var(--start-dt-border) 1px solid;
+  background: var(--start-dt-surface);
+  color: var(--start-dt-text);
+
+  cursor: pointer;
+}
+
+[data-solid-issues-filter]::before {
+  content: '';
+
+  width: 0.5rem;
+  height: 0.5rem;
+
+  border-radius: 9999px;
+  background: var(--start-dt-danger);
+}
+
+[data-solid-issues-filter='warn']::before {
+  background: oklch(0.8 0.15 80);
+}
+
+[data-solid-issues-filter='info']::before {
+  background: oklch(0.68 0.13 245);
+}
+
+[data-solid-issues-filter]:hover {
+  background: var(--start-dt-surface-hover);
+}
+
+[data-solid-issues-filter][data-off] {
+  color: var(--start-dt-text-muted);
+  opacity: 0.55;
+}
+
+[data-solid-issues-nav-actions] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 0.375rem;
+
+  margin-left: auto;
+}
+
+[data-solid-issues-count] {
+  color: var(--start-dt-text-muted);
+  white-space: nowrap;
+}
+
+[data-solid-issues-body] {
+  display: flex;
+  flex-direction: row;
+
+  flex: 1;
+  min-height: 0;
+}
+
+[data-solid-issues-list] {
+  display: flex;
+  flex-direction: column;
+
+  flex: 1;
+  min-width: 0;
+
+  overflow: auto;
+}
+
+[data-solid-issues-row] {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  gap: 0.25rem;
+
+  padding: 0.5rem 0.75rem;
+
+  border: none;
+  border-bottom: var(--start-dt-border-soft) 1px solid;
+  background: none;
+  color: var(--start-dt-text);
+  text-align: left;
+
+  cursor: pointer;
+}
+
+[data-solid-issues-row]:hover {
+  background: var(--start-dt-surface-hover);
+}
+
+[data-solid-issues-row][data-selected] {
+  background: var(--start-dt-surface-active);
+}
+
+[data-solid-issues-row]:focus-visible {
+  outline: 2px solid var(--start-dt-accent);
+  outline-offset: -2px;
+}
+
+[data-solid-issues-row-head] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 0.5rem;
+
+  min-width: 0;
+}
+
+[data-solid-issues-row-count] {
+  padding: 0 0.375rem;
+
+  border-radius: 9999px;
+  background: var(--start-dt-surface-hover);
+  color: var(--start-dt-text-muted);
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.125rem;
+}
+
+[data-solid-issues-row-owner] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  color: var(--start-dt-text-muted);
+}
+
+[data-solid-issues-row-message] {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  color: var(--start-dt-text-muted);
+}
+
+[data-solid-issues-detail] {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.625rem;
+
+  width: 24rem;
+  flex-shrink: 0;
+  min-height: 0;
+
+  padding: 0.625rem 0.75rem;
+
+  border-left: var(--start-dt-border-soft) 1px solid;
+  overflow: auto;
+}
+
+[data-solid-issues-detail-head] {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  gap: 0.375rem;
+
+  min-width: 0;
+}
+
+[data-solid-issues-detail-head] [data-solid-copy-report] {
+  margin-left: auto;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+}
+
+[data-solid-issues-detail-head] [data-solid-copy-report] > svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+[data-solid-issues-detail-message] {
+  white-space: pre-wrap;
+}
+
+[data-solid-issues-actions] {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+
+  gap: 0.375rem;
+}
+
+[data-solid-issues-action] {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 0.375rem;
+
+  padding: 0.25rem 0.5rem;
+
+  border-radius: 0.375rem;
+  border: var(--start-dt-border) 1px solid;
+  background: var(--start-dt-surface);
+  color: var(--start-dt-accent);
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+[data-solid-issues-action]:hover {
+  background: var(--start-dt-accent-soft);
+}
+
+[data-solid-issues-action] > svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+[data-solid-issues-data] {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.25rem;
+}
+
+[data-solid-issues-data] > pre {
+  margin: 0;
+  padding: 0.5rem;
+
+  border-radius: 0.375rem;
+  background: var(--start-dt-surface);
+  overflow: auto;
+}
+
+/* The pane scrolls, so its blocks keep their height instead of shrinking to fit. */
+[data-solid-issues-detail] > * {
+  flex-shrink: 0;
+}
+
+[data-solid-issues-data] > pre > * {
+  white-space: pre;
+}
+
+[data-solid-issues-detail] [data-solid-kv-key] {
+  flex-basis: 4rem;
+}

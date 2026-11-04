@@ -432,6 +432,11 @@
   color: oklch(0.78 0.14 25);
 }
 
+[data-solid-dev-toolbar-tab-badge='warning'] {
+  background: oklch(0.8 0.15 80 / 0.18);
+  color: oklch(0.85 0.12 80);
+}
+
 [data-solid-dev-toolbar-body] {
   flex: 1;
   min-width: 0;

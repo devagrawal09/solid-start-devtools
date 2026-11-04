@@ -52,6 +52,14 @@ async function emitUploadRequest() {
   });
 }
 
+// Reads a signal in its body, outside any tracking scope, which the runtime
+// reports as a warning.
+function DraftReader() {
+  const [draft] = createSignal('draft text', { name: 'draft' });
+  const text = draft();
+  return <p id="fixture-draft">{text}</p>;
+}
+
 function Greeting(props: { name: string }) {
   return <p id="fixture-greeting">{`hello ${props.name}`}</p>;
 }
@@ -77,6 +85,7 @@ function Counter() {
 
 function App() {
   const [broken, setBroken] = createSignal(false);
+  const [writer, setWriter] = createSignal(false);
 
   return (
     <main>
@@ -92,6 +101,12 @@ function App() {
       <button id="emit-upload-request" onClick={emitUploadRequest}>
         emit upload request
       </button>
+      <button id="emit-warning" onClick={() => setWriter((value) => !value)}>
+        emit warning
+      </button>
+      <Show when={writer()}>
+        <DraftReader />
+      </Show>
       <button id="throw-client-error" onClick={() => setBroken(true)}>
         throw client error
       </button>
