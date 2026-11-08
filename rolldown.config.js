@@ -96,8 +96,9 @@ function config({ input, entryFileNames, chunkFileNames, generate, server = fals
 
 export default defineConfig([
   config({
-    input: 'src/index.tsx',
-    entryFileNames: 'index.js',
+    // One build, so the toolbar and the time-travel entry share the runtime.
+    input: { index: 'src/index.tsx', 'time-travel': 'src/time-travel/index.ts' },
+    entryFileNames: '[name].js',
     chunkFileNames: 'chunks/[name]-[hash].js',
     generate: 'dom',
   }),
@@ -109,14 +110,14 @@ export default defineConfig([
     server: true,
   }),
   config({
-    input: 'src/noop.ts',
-    entryFileNames: 'noop.js',
+    input: { noop: 'src/noop.ts', 'time-travel-noop': 'src/time-travel/noop.ts' },
+    entryFileNames: '[name].js',
     chunkFileNames: 'noop-chunks/[name]-[hash].js',
     generate: 'ssr',
     server: true,
   }),
   {
-    input: 'src/index.tsx',
+    input: { index: 'src/index.tsx', 'time-travel/index': 'src/time-travel/index.ts' },
     output: {
       format: 'esm',
       dir: 'dist/types',

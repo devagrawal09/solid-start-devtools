@@ -22,6 +22,10 @@ and mounts the toolbar itself. `examples/demo/src/App.tsx` is the whole app.
 - The server function panel lists the same call with its request and response bodies.
 - The error panel catches the error behind the "Throw an error" button, with a
   source-mapped stack frame.
+- `orders`, `query`, `status-filter`, `sort-order` and `currency` are created with
+  `createTracked`, so the History panel records each update to them and can show the app
+  as it was after any of them. This needs a solid-js whose `flush` record reports
+  `changes`; with an older one the panel says so.
 
 ## Things to try
 

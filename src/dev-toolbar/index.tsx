@@ -27,6 +27,7 @@ import {
   IssueIcon,
   MinimizeIcon,
   SolidIcon,
+  HistoryIcon,
   TimelineIcon,
   TreeIcon,
 } from './icons.js';
@@ -43,6 +44,8 @@ import { pageRoute } from './report/markdown.js';
 import { excludeOwner, includeOwner } from './ownership/registry.js';
 import { excludeReactiveOwner, includeReactiveOwner } from './reactivity/registry.js';
 import { startTimeline, TimelineBuilder, type TimelineEntry } from './timeline/tracker.js';
+import { HistoryLock } from './history/lock.js';
+import { timelineSource } from './history/source.js';
 import './index.css';
 
 const ErrorViewer = clientOnly(() => import('./error-viewer/index.js'), { lazy: true });
@@ -51,14 +54,16 @@ const OwnershipViewer = clientOnly(() => import('./ownership/index.js'), { lazy:
 const IssuesViewer = clientOnly(() => import('./issues/index.js'), { lazy: true });
 const TimelineViewer = clientOnly(() => import('./timeline/index.js'), { lazy: true });
 const AsyncViewer = clientOnly(() => import('./async/index.js'), { lazy: true });
+const HistoryViewer = clientOnly(() => import('./history/index.js'), { lazy: true });
 
-type Tab = 'err' | 'issues' | 'tl' | 'async' | 'fn' | 'rx' | 'own';
+type Tab = 'err' | 'issues' | 'tl' | 'async' | 'hist' | 'fn' | 'rx' | 'own';
 
 const TABS: { value: Tab; label: string; icon: typeof ErrorIcon }[] = [
   { value: 'err', label: 'Errors', icon: ErrorIcon },
   { value: 'issues', label: 'Issues', icon: IssueIcon },
   { value: 'tl', label: 'Timeline', icon: TimelineIcon },
   { value: 'async', label: 'Async', icon: AsyncIcon },
+  { value: 'hist', label: 'History', icon: HistoryIcon },
   { value: 'fn', label: 'Server functions', icon: FunctionIcon },
   { value: 'rx', label: 'Reactivity', icon: GraphIcon },
   { value: 'own', label: 'Ownership', icon: TreeIcon },
@@ -219,6 +224,9 @@ export function DevToolbar(props: DevToolbarProps) {
   // A panel is live only while the dock is open on its tab, so the graph and
   // the tree stop watching the app when nobody looks at them.
   const visible = (value: Tab) => open() && tab() === value;
+
+  // The app's time-travel timeline, once it tracks something.
+  const history = timelineSource();
 
   onSettled(() => {
     const saved = readDockState();
@@ -688,6 +696,7 @@ export function DevToolbar(props: DevToolbarProps) {
                     show('own');
                   }}
                 />
+                <HistoryViewer show={visible('hist')} timeline={history()} />
                 <ReactivityViewer
                   show={visible('rx')}
                   focus={graphFocus()}
@@ -723,6 +732,7 @@ export function DevToolbar(props: DevToolbarProps) {
           </div>
         </div>
         <HighlightUpdatesOverlay active={highlightUpdates()} />
+        <HistoryLock timeline={history()} />
         <InspectorOverlay
           active={inspecting()}
           onSelect={selectComponent}

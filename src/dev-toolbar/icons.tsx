@@ -837,3 +837,22 @@ export function AsyncIcon(props: JSX.IntrinsicElements['svg'] & { title: string 
     </svg>
   );
 }
+
+export function HistoryIcon(props: JSX.IntrinsicElements['svg'] & { title: string }): JSX.Element {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      {...props}
+    >
+      <title>{props.title}</title>
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M3 12a9 9 0 1 0 2.64-6.36L3 8.25M3 3.75v4.5h4.5M12 7.5V12l3 2"
+      />
+    </svg>
+  );
+}

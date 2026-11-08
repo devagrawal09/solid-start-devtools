@@ -19,6 +19,17 @@
         "import": "./dist/index.js"
       },
       "default": "./dist/noop.js"
+    },
+    "./time-travel": {
+      "types": "./dist/types/time-travel/index.d.ts",
+      "development": {
+        "worker": "./dist/time-travel-noop.js",
+        "browser": "./dist/time-travel.js",
+        "deno": "./dist/time-travel-noop.js",
+        "node": "./dist/time-travel-noop.js",
+        "import": "./dist/time-travel.js"
+      },
+      "default": "./dist/time-travel-noop.js"
     }
   },
   "scripts": {

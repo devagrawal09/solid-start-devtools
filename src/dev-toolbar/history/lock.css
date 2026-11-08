@@ -1,0 +1,25 @@
+/* Outside the dock: the page under a past step is read-only. */
+[data-solid-history-lock] {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  padding-top: 0.75rem;
+
+  outline: oklch(0.68 0.13 245) 3px solid;
+  outline-offset: -3px;
+  cursor: not-allowed;
+}
+
+[data-solid-history-lock-label] {
+  padding: 0.375rem 0.75rem;
+
+  border-radius: 9999px;
+  background: oklch(0.16 0.015 265);
+  color: oklch(0.93 0.005 265);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.25);
+}

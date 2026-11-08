@@ -1,4 +1,5 @@
 import { createEffect, createMemo, createSignal, For, Loading, onSettled, Show } from 'solid-js';
+import { createTracked } from '@solidjs/start-devtools/time-travel';
 import { createOrder, SEED_ORDERS, type Order, type OrderStatus } from './orders.js';
 import { reportCall } from './report-call.js';
 import './styles.css';
@@ -60,11 +61,12 @@ function Ticker() {
 }
 
 export default function App() {
-  const [orders, setOrders] = createSignal<Order[]>(SEED_ORDERS, { name: 'orders' });
-  const [query, setQuery] = createSignal('', { name: 'query' });
-  const [filter, setFilter] = createSignal<Filter>('all', { name: 'status-filter' });
-  const [sort, setSort] = createSignal<Sort>('newest', { name: 'sort-order' });
-  const [currency, setCurrency] = createSignal('USD', { name: 'currency' });
+  // Tracked state is recorded on the History panel and can be rewound there.
+  const [orders, setOrders] = createTracked<Order[]>(createSignal, SEED_ORDERS, { name: 'orders' });
+  const [query, setQuery] = createTracked(createSignal, '', { name: 'query' });
+  const [filter, setFilter] = createTracked<Filter>(createSignal, 'all', { name: 'status-filter' });
+  const [sort, setSort] = createTracked<Sort>(createSignal, 'newest', { name: 'sort-order' });
+  const [currency, setCurrency] = createTracked(createSignal, 'USD', { name: 'currency' });
   const [broken, setBroken] = createSignal(false, { name: 'broken' });
 
   const matching = createMemo(

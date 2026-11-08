@@ -8,6 +8,7 @@ Development error and server-function tooling for Solid Start mode.
 - The issues the runtime reports, such as a signal read outside a tracking scope.
 - A timeline of what each action re-ran, and why.
 - What the app is loading now, and how its async loads, waits and fallbacks went.
+- A history of tracked state that can show the app as it was after any update.
 - Server-function request and response inspection.
 - A reactivity graph of the live signals, memos and effects in the app.
 - An ownership tree of the components and scopes the app created.
@@ -123,6 +124,37 @@ The async panel shows what the app waits on.
 Select a record for its details, the action that started it, and links to the reactivity
 graph and the ownership tree. Records come from the attribution engine of `solid-js`, so a
 record shows up once it has finished. The panel needs a development build of `solid-js`.
+
+## History
+
+The History panel records how the state you track changed, and can show the app as it was
+after any update. Track state by creating it with `createTracked`:
+
+```tsx
+import { createSignal, createStore } from 'solid-js';
+import { createTracked } from '@solidjs/start-devtools/time-travel';
+
+const [count, setCount] = createTracked(createSignal, 0, { name: 'count' });
+const [todos, setTodos] = createTracked(createStore, { items: [] }, { name: 'todos' });
+```
+
+`createTracked` takes a primitive and its arguments, and returns what the primitive returns.
+It works with `createSignal`, `createOptimistic`, `createMemo`, `createStore`,
+`createOptimisticStore` and `createProjection`. In production and on the server it is the
+primitive itself. Name what you track: the name is how the panel shows it.
+
+- Each update that changed tracked state is one row: the action or interaction behind it,
+  and the names of what changed. An action's held writes appear when they land, and an
+  optimistic value when it appears and when it lifts.
+- Select a row to show the app as it was right after it, and its values. Nothing is written
+  to the app's state: the present keeps running underneath and new updates are still
+  recorded. The page is read-only until you press **Resume**.
+- **Branch here** makes the shown update the present and drops the rows after it.
+
+Only tracked state is rewound. A component that reads untracked state keeps showing the
+present, and an untracked async memo that reads tracked state loads again for the update you
+view. The panel needs a solid-js whose `flush` record reports `changes`; with an older one it
+says so, and `createTracked` returns plain primitives.
 
 ## Reactivity graph
 
