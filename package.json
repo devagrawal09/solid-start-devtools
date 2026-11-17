@@ -1,6 +1,6 @@
 {
   "name": "@solidjs/start-devtools",
-  "version": "1.0.0-next.9",
+  "version": "1.0.0",
   "description": "Development error and server-function tooling for Solid Start mode",
   "type": "module",
   "module": "./dist/index.js",
