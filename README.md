@@ -13,7 +13,7 @@ Development error and server-function tooling for Solid Start mode.
 - An ownership tree of the components and scopes the app created.
 
 ```sh
-pnpm add @solidjs/start-devtools@next
+pnpm add @solidjs/start-devtools
 ```
 
 The toolbar is a dock at the bottom of the page. Closed, it is a small grip at the bottom

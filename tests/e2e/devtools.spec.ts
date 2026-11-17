@@ -597,7 +597,7 @@ test('lists runtime issues', async ({ page }) => {
   await rows.first().click();
   const detail = page.locator('[data-solid-issues-detail]');
   // The toolbar's own owners are not part of the path.
-  await expect(detail).toContainText('<App> › <Show> › value › <DraftReader>');
+  await expect(detail).toContainText('<App> › effect › <DraftReader>');
   await expect(detail).not.toContainText('<DevToolbar>');
   await expect(detail).toContainText('draft');
   await expect(detail.getByRole('link', { name: 'Open the repair guide' })).toHaveAttribute(

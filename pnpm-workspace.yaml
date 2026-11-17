@@ -1,16 +1,15 @@
 minimumReleaseAgeExclude:
-  - solid-use@1.0.0-next.3
   - terracotta@2.0.0-next.9
-  - '@solidjs/compiler-darwin-arm64@2.0.0-rc.20'
-  - '@solidjs/compiler-darwin-x64@2.0.0-rc.20'
-  - '@solidjs/compiler-linux-arm64-gnu@2.0.0-rc.20'
-  - '@solidjs/compiler-linux-x64-gnu@2.0.0-rc.20'
-  - '@solidjs/compiler-wasm32-wasi@2.0.0-rc.20'
-  - '@solidjs/compiler-win32-x64-msvc@2.0.0-rc.20'
-  - '@solidjs/compiler@2.0.0-rc.20'
-  - '@solidjs/signals@2.0.0-rc.20'
-  - '@solidjs/web@2.0.0-rc.20'
-  - solid-js@2.0.0-rc.20
-  - '@solidjs/vite-plugin@3.0.0-next.57'
+  - '@solidjs/compiler-darwin-arm64@2.0.0'
+  - '@solidjs/compiler-darwin-x64@2.0.0'
+  - '@solidjs/compiler-linux-arm64-gnu@2.0.0'
+  - '@solidjs/compiler-linux-x64-gnu@2.0.0'
+  - '@solidjs/compiler-wasm32-wasi@2.0.0'
+  - '@solidjs/compiler-win32-x64-msvc@2.0.0'
+  - '@solidjs/compiler@2.0.0'
+  - '@solidjs/signals@2.0.0'
+  - '@solidjs/web@2.0.0'
+  - solid-js@2.0.0
+  - '@solidjs/vite-plugin@3.0.0'
 onlyBuiltDependencies:
   - esbuild
