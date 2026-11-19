@@ -696,6 +696,18 @@ test('shows what each action re-ran and why', async ({ page }) => {
   await expect(actions).toHaveCount(1);
 });
 
+test('keeps the page running while an action refreshes a load', async ({ page }) => {
+  await page.goto('/?refresh-action');
+  const count = page.locator('#action-count');
+  await expect(count).toHaveText('served 0');
+  // The toolbar writes its lists after each flush. Held by the action, those
+  // writes used to flush again forever and the page stopped responding.
+  for (const expected of ['served 1', 'served 2']) {
+    await page.locator('#run-action').click({ timeout: 5000 });
+    await expect(count).toHaveText(expected, { timeout: 5000 });
+  }
+});
+
 test('lists the server calls of an action and opens them', async ({ page }) => {
   await page.goto('/');
   // The handler writes nothing, so the call is all the click did.

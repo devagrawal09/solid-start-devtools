@@ -22,7 +22,11 @@ function solid(generate) {
     name: 'solid',
     async transform(code, id) {
       const filename = id.replace(/\?.*$/, '');
-      if (/[/\\]node_modules[/\\]/.test(filename) || !/\.[mc]?[jt]sx$/i.test(filename)) {
+      if (
+        (/[/\\]node_modules[/\\]/.test(filename) &&
+          !/[/\\]terracotta[/\\]dist[/\\]/.test(filename)) ||
+        !/\.[mc]?[jt]sx$/i.test(filename)
+      ) {
         return null;
       }
 

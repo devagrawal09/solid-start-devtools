@@ -129,6 +129,23 @@ function clampHeight(height: number, max = window.innerHeight * 0.9): number {
   return Math.round(Math.min(Math.max(height, MIN_HEIGHT), max));
 }
 
+/**
+ * Writes a panel's list only when the tracker has a new one. The trackers run on
+ * every flush record, and the toolbar's own write can be held by a pending action
+ * the same way an app write is. Writing the same list back to a held signal still
+ * schedules a flush, whose record called the tracker again, so the tab never
+ * went idle (solidjs/solid#5038).
+ */
+function writeWhenChanged<T>(read: () => T, write: (value: T) => unknown): () => void {
+  let written: T | undefined;
+  return () => {
+    const next = read();
+    if (next === written) return;
+    written = next;
+    write(next);
+  };
+}
+
 // The shortcut leaves typing alone, since Alt+Shift+D types a character on macOS.
 function isEditable(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -499,14 +516,24 @@ export function DevToolbar(props: DevToolbarProps) {
   const timeline = new TimelineBuilder();
   const [timelineEntries, setTimelineEntries] = createSignal<TimelineEntry[]>([]);
   if (!isServer) {
-    onCleanup(startTimeline(timeline, () => setTimelineEntries(timeline.snapshot())));
+    onCleanup(
+      startTimeline(
+        timeline,
+        writeWhenChanged(() => timeline.snapshot(), setTimelineEntries),
+      ),
+    );
   }
 
   // Loads that finish before the toolbar settles are kept too.
   const asyncHistory = new AsyncHistory();
   const [asyncRecords, setAsyncRecords] = createSignal<AsyncRecord[]>([]);
   if (!isServer) {
-    onCleanup(startAsyncCapture(asyncHistory, () => setAsyncRecords(asyncHistory.records)));
+    onCleanup(
+      startAsyncCapture(
+        asyncHistory,
+        writeWhenChanged(() => asyncHistory.records, setAsyncRecords),
+      ),
+    );
   }
 
   const [instances, setInstances] = createSignal<

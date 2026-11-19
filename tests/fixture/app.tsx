@@ -7,7 +7,7 @@ import {
   pushServerFunctionCall,
 } from '@solidjs/start-devtools';
 import { serializeString } from '@solidjs/web/server-functions/client';
-import { createEffect, createMemo, createSignal, OBSERVE, Show } from 'solid-js';
+import { action, createEffect, createMemo, createSignal, OBSERVE, refresh, Show } from 'solid-js';
 
 function Broken(): never {
   throw new Error('client boom');
@@ -128,6 +128,56 @@ function AsyncProfile() {
   );
 }
 
+// An action that waits on a request and then refreshes a load (solidjs/solid#5038). Only on
+// `?refresh-action`, so the other tests see the app as before.
+const refreshAction = new URLSearchParams(location.search).has('refresh-action');
+let served = 0;
+function RefreshingAction() {
+  const count = createMemo(
+    async () => {
+      const value = served;
+      await wait(20);
+      return value;
+    },
+    { name: 'served' },
+  );
+  const increment = action(function* () {
+    // The request settles with its call record, as the server function runtime sends it.
+    const at = performance.now();
+    yield wait(20).then(() => {
+      served++;
+      OBSERVE?.records.emit(
+        'call',
+        {
+          id: 'increment',
+          name: 'increment',
+          at,
+          durationMs: performance.now() - at,
+          method: 'POST',
+          outcome: 'ok',
+          status: 200,
+        },
+        {
+          args: [],
+          request: new Request('/_server', { method: 'POST' }),
+          response: new Response('null'),
+        } as never,
+      );
+    });
+    refresh(count);
+  });
+  return (
+    <>
+      <button id="run-action" onClick={() => increment()}>
+        run action
+      </button>
+      <Loading fallback={<p id="action-fallback">loading</p>}>
+        <p id="action-count">{`served ${count()}`}</p>
+      </Loading>
+    </>
+  );
+}
+
 function Greeting(props: { name: string }) {
   return <p id="fixture-greeting">{`hello ${props.name}`}</p>;
 }
@@ -161,6 +211,9 @@ function App() {
       <p id="fixture-content">app content</p>
       <Greeting name="ada" />
       <Counter />
+      <Show when={refreshAction}>
+        <RefreshingAction />
+      </Show>
       <button id="emit-server-function-request" onClick={emitServerFunctionRequest}>
         emit server function request
       </button>
