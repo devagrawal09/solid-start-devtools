@@ -574,6 +574,75 @@ test('maps the ownership tree', async ({ page }) => {
   ).toHaveAttribute('data-solid-reactivity-node', 'selected');
 });
 
+test('hosts the ReactiveScript map only when the app registers one', async ({ page, context }) => {
+  // Without `__RX__` the Structure view has no Map chip.
+  await page.goto('/');
+  await openTab(page, 'Ownership');
+  await expect(page.getByRole('tab', { name: 'ReactiveScript map', exact: true })).toHaveCount(0);
+
+  // A stand-in for `@reactivescript/map/live`, registered after the toolbar
+  // mounted: the view reads it again when it opens.
+  await page.evaluate(() => {
+    const calls: string[] = [];
+    Reflect.set(window, '__rxCalls', calls);
+    Reflect.set(globalThis, '__RX__', {
+      graphs: [],
+      mount(el: HTMLElement) {
+        calls.push(el.isConnected ? 'mount' : 'mount detached');
+        const frame = document.createElement('iframe');
+        frame.srcdoc = '<p id="rx-map-page">map</p>';
+        el.append(frame);
+        return () => {
+          calls.push('dispose');
+          frame.remove();
+        };
+      },
+    });
+  });
+  const calls = () => page.evaluate(() => Reflect.get(window, '__rxCalls') as string[]);
+  await page.getByRole('tab', { name: 'Health', exact: true }).click();
+  await page.getByRole('tab', { name: 'Structure', exact: true }).click();
+
+  const mapChip = page.getByRole('tab', { name: 'ReactiveScript map', exact: true });
+  await mapChip.click();
+  await expect(mapChip).toHaveAttribute('aria-selected', 'true');
+  const frame = page.locator('[data-solid-rx-map-frame] iframe');
+  await expect(frame).toBeVisible();
+  await expect(
+    page.frameLocator('[data-solid-rx-map-frame] iframe').locator('#rx-map-page'),
+  ).toHaveText('map');
+  expect(await calls()).toEqual(['mount']);
+  // The map fills the pane under the chips.
+  const pane = (await page.locator('[data-solid-rx-map-frame]').boundingBox())!;
+  const box = (await frame.boundingBox())!;
+  expect(box.width).toBe(pane.width);
+  expect(box.height).toBe(pane.height);
+
+  // The arrow keys move between the three chips.
+  await mapChip.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('tab', { name: 'Ownership', exact: true })).toBeFocused();
+  await expect.poll(calls).toEqual(['mount', 'dispose']);
+
+  // Coming back mounts it again, and closing the dock takes it out.
+  await page.keyboard.press('ArrowLeft');
+  await expect(mapChip).toBeFocused();
+  await expect.poll(calls).toEqual(['mount', 'dispose', 'mount']);
+  await page.getByRole('button', { name: 'Close Start Devtools' }).click();
+  await expect.poll(calls).toEqual(['mount', 'dispose', 'mount', 'dispose']);
+
+  // The dock remembers Map. A load without a map falls back to Owners.
+  await page.getByRole('button', { name: 'Open Start Devtools' }).click();
+  await expect(frame).toBeVisible();
+  const other = await context.newPage();
+  await other.goto('/');
+  await expect(other.getByRole('tab', { name: 'Ownership', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(other.getByRole('tab', { name: 'ReactiveScript map', exact: true })).toHaveCount(0);
+});
+
 test('lists runtime issues', async ({ page }) => {
   await page.goto('/');
 

@@ -26,7 +26,8 @@ The dock has three views, picked in the header:
 - **Health**: thrown errors and the issues the runtime reports, in one list.
 - **Activity**: one stream of actions, server-function calls, async loads and errors, with
   a strip of lanes over time.
-- **Structure**: the ownership tree, or the reactivity graph.
+- **Structure**: the ownership tree, or the reactivity graph. In a ReactiveScript app it also
+  has a **Map** chip for the app's live map.
 
 Press ⌘K (Ctrl+K) while the dock is open to find a component, signal, memo, action or
 server function by name.
@@ -165,6 +166,18 @@ extra setup. Clicking it asks the dev server to open the file in your editor.
 
 The panel reads the tree through the development hooks in `solid-js`, so it is empty in a
 production build of the runtime. It only watches while it is open.
+
+## ReactiveScript map
+
+An app written in ReactiveScript can register a live map of its reactive graph in
+development, by setting `globalThis.__RX__` to an object with a `mount(element)` function
+that returns a dispose function. `@reactivescript/map/live` does this from the app's dev
+entry. The Structure view then has a third chip, **Map**, which mounts the map into the
+view, and lights the nodes each update changed.
+
+The toolbar looks for `__RX__` each time the view opens, and takes the map out again when you
+leave Map or close the dock. It does not depend on any ReactiveScript package. On a page with
+no map, a remembered Map chip falls back to Owners.
 
 ## Copy for an agent
 

@@ -48,7 +48,8 @@ const CommandPalette = clientOnly(() => import('./palette/index.js'), { lazy: tr
 
 /** A view of the dock. */
 type Tab = 'health' | 'activity' | 'structure';
-type StructureMode = 'owners' | 'graph';
+/** Map is offered only while the app has a ReactiveScript map. The view falls back to Owners. */
+type StructureMode = 'owners' | 'graph' | 'map';
 
 const VIEWS: { value: Tab; label: string }[] = [
   { value: 'health', label: 'Health' },
@@ -297,7 +298,11 @@ export function DevToolbar(props: DevToolbarProps) {
     const saved = readDockState();
     const restored = savedTab(saved.tab);
     if (restored) setTab(restored);
-    if (saved.structureMode === 'owners' || saved.structureMode === 'graph') {
+    if (
+      saved.structureMode === 'owners' ||
+      saved.structureMode === 'graph' ||
+      saved.structureMode === 'map'
+    ) {
       setStructureMode(saved.structureMode);
     }
     void loadSolidVersion().then((value) => {
