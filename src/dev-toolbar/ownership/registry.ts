@@ -1,5 +1,6 @@
 import { DEV } from 'solid-js';
 import { listenToDevHooks } from '../dev-hooks.js';
+import { quietly } from '../quiet.js';
 import { isSolidBuiltin } from './builtins.js';
 import { buildOwnershipTree, EMPTY_TREE, type OwnershipTree, type RawNode } from './tree.js';
 
@@ -172,7 +173,10 @@ export interface SnapshotOptions {
  */
 export function snapshotOwnershipTree(options?: SnapshotOptions): OwnershipTree {
   if (!isOwnershipAvailable()) return EMPTY_TREE;
+  return quietly(() => readTree(options));
+}
 
+function readTree(options?: SnapshotOptions): OwnershipTree {
   const roots = new Set<RawNode>();
   if (seedOwner) roots.add(rootOf(seedOwner));
   for (const ref of tracked) {

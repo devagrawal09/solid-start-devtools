@@ -1,4 +1,5 @@
 import { DEV } from 'solid-js';
+import { quietly } from './quiet.js';
 
 /** The dev hooks of solid-js the toolbar uses. */
 export interface DevHooksSlot {
@@ -37,17 +38,25 @@ export function createDevHooksHub(slot: DevHooksSlot): DevHooksHub {
       onUpdate: slot.onUpdate,
     };
     original = found;
+    // The hooks run inside the app, often in a component body, so the
+    // listeners read quietly: what they read is not the app's doing.
     slot.onOwner = (owner) => {
       found.onOwner?.(owner);
-      for (const listener of listeners) listener.onOwner?.(owner);
+      quietly(() => {
+        for (const listener of listeners) listener.onOwner?.(owner);
+      });
     };
     slot.onGraph = (value, owner) => {
       found.onGraph?.(value, owner);
-      for (const listener of listeners) listener.onGraph?.(value, owner);
+      quietly(() => {
+        for (const listener of listeners) listener.onGraph?.(value, owner);
+      });
     };
     slot.onUpdate = () => {
       found.onUpdate?.();
-      for (const listener of listeners) listener.onUpdate?.();
+      quietly(() => {
+        for (const listener of listeners) listener.onUpdate?.();
+      });
     };
   }
 

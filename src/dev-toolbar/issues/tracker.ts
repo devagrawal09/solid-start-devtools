@@ -1,4 +1,5 @@
 import { OBSERVE } from 'solid-js';
+import { isQuiet } from '../quiet.js';
 
 /** One finding of the runtime's diagnostics channel, as `OBSERVE.diagnostics` delivers it. */
 export interface IssueEvent {
@@ -118,6 +119,8 @@ export function captureIssues(
   if (!diagnostics) return () => {};
   let pending: { event: IssueEvent; subject: object | undefined; at: number }[] = [];
   return diagnostics.subscribe((event, subject) => {
+    // The devtools' own reads of the app are not the app's findings.
+    if (isQuiet()) return;
     if (!pending.length) {
       queueMicrotask(() => {
         const batch = pending;

@@ -19,6 +19,7 @@ vi.mock('solid-js', () => ({
   get DEV() {
     return runtime.DEV;
   },
+  untrack: <T>(read: () => T): T => read(),
 }));
 
 describe('registry without the dev runtime', () => {

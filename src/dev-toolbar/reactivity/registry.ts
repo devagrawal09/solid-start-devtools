@@ -1,5 +1,6 @@
 import { DEV } from 'solid-js';
 import { listenToDevHooks } from '../dev-hooks.js';
+import { quietly } from '../quiet.js';
 
 // Flag bits used by @solidjs/signals. They are internal to the runtime, so the
 // values are copied here and every read is defensive.
@@ -186,10 +187,12 @@ export function startReactivityTracking(): () => void {
  */
 function recordUpdates(): void {
   if (tracked.size > STATS_LIMIT) return;
-  for (const ref of tracked) {
-    const node = ref.deref();
-    if (node) statsOf(node);
-  }
+  quietly(() => {
+    for (const ref of tracked) {
+      const node = ref.deref();
+      if (node) statsOf(node);
+    }
+  });
 }
 
 /** Drops one watcher. Stops listening once nothing watches any more. */
@@ -420,6 +423,10 @@ export interface SnapshotOptions {
  */
 export function snapshotReactivityGraph(options?: SnapshotOptions): ReactiveGraph {
   if (!isReactivityAvailable()) return EMPTY_GRAPH;
+  return quietly(() => readGraph(options));
+}
+
+function readGraph(options?: SnapshotOptions): ReactiveGraph {
   const includeDisposed = options?.includeDisposed ?? false;
 
   const queue: RawNode[] = [];
